@@ -47,11 +47,9 @@ class Name(Resource):
                     cache.set(f"name_{name}", response, timeout=self.get_cache_timeout())
                     return response, 200
                 except requests.exceptions.RequestException as e:
-                    return {"error": f"Fetching name - {e}"}, 500
-            else:
-                return name_cache, 200
-        else:
-            return {"error": f"Fetching name"}, 404
+                    return {"error": f"Fetching name - {e}"}, 50
+            return name_cache, 200
+        return {"error": f"Fetching name"}, 404
     
     def fetch_name(self, name):
         url = f"{self.NAME_API_URL}{name}"
