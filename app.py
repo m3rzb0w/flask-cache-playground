@@ -44,10 +44,10 @@ class Name(Resource):
             if name_cache is None:
                 try:
                     response = self.fetch_name(name)
-                    cache.set(f"name_{name}", response, timeout=10)
+                    cache.set(f"name_{name}", response, timeout=self.get_cache_timeout())
                     return response, 200
                 except requests.exceptions.RequestException as e:
-                    return {"error": f"Fetching name - {e}"}, 404
+                    return {"error": f"Fetching name - {e}"}, 500
             else:
                 return name_cache, 200
         else:
@@ -60,6 +60,9 @@ class Name(Resource):
         response = requests.get(url, headers=headers, data=payload)
         response.raise_for_status()
         return loads(response.text)
+
+    def get_cache_timeout(self):
+        return 10
 
 class Ping(Resource):
     def get(self):
