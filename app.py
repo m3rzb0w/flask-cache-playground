@@ -4,6 +4,9 @@ from datetime import datetime
 from json import loads, dumps
 import requests
 from flask_caching import Cache
+import threading
+
+
 
 
 config = {
@@ -20,7 +23,7 @@ cache = Cache(app)
 
 class Catfact(Resource):
     CAT_FACT_URL = "https://catfact.ninja/fact"
-    @cache.cached(timeout=5) 
+    @cache.cached(timeout=15, key_prefix="cached_catfact") 
     def get(self):
         try:
             response = self.fetch_cat_fact()
@@ -62,6 +65,17 @@ class Name(Resource):
     def get_cache_timeout(self):
         return 10
 
+def cache_catfact_periodically():
+    while True:
+        try:
+            print("threading -> cat_fact") 
+            catfact = Catfact().fetch_cat_fact()
+            cache.set("cached_catfact", catfact, timeout=15)
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching cat fact: {e}")
+
+        threading.Event().wait(30)
+
 class Ping(Resource):
     def get(self):
         current_datetime = datetime.now()
@@ -72,4 +86,5 @@ api.add_resource(Name, '/name/<string:name>')
 api.add_resource(Ping, '/ping')
 
 if __name__ == '__main__':
+    threading.Thread(target=cache_catfact_periodically).start() #called twice in dubug
     app.run(debug=True)
